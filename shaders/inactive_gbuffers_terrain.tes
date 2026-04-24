@@ -1,0 +1,75 @@
+#version 400 compatibility
+
+#include "wave.glsl"
+
+layout (triangles, equal_spacing, ccw) in;
+
+uniform sampler2D heightMap;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+in vec2 texCoord[];
+in vec2 lmCoord[];
+in vec4 fragColour[];
+in vec3 normal[];
+
+out vec2 texCoordF;
+out vec2 lmCoordF;
+out vec4 fragColourF;
+out vec3 normalF;
+
+// out float Height;
+
+void main() {
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    vec2 t00 = texCoord[0];
+    vec2 t01 = texCoord[1];
+    vec2 t10 = texCoord[2];
+
+    texCoordF = (u * texCoord[0] + v * texCoord[1] + (1 - u - v) * texCoord[2]);
+    lmCoordF = (u * lmCoord[0] + v * lmCoord[1] + (1 - u - v) * lmCoord[2]);
+    normalF = (u * normal[0] + v * normal[1] + (1 - u - v) * normal[2]);
+    fragColourF = (u * fragColour[0] + v * fragColour[1] + (1 - u - v) * fragColour[2]);
+    vec4 position = (u * gl_in[0].gl_Position + v * gl_in[1].gl_Position + (1 - u - v) * gl_in[2].gl_Position);
+
+    vec3 worldSpaceVertexPosition = position.xyz;
+
+    vec3 displacement = globalDisplacement;
+
+    displacement += gerstner(worldSpaceVertexPosition, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
+    displacement += gerstner(worldSpaceVertexPosition, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
+    displacement += gerstner(worldSpaceVertexPosition, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+
+    position.xyz += displacement;
+
+    normalF += gerstner_normal(worldSpaceVertexPosition, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
+    normalF += gerstner_normal(worldSpaceVertexPosition, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
+    normalF += gerstner_normal(worldSpaceVertexPosition, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+    
+    normalF = normalize(normalF);
+
+    vec2 t0 = (t01 - t00) * u + t00;
+    vec2 t1 = (t01 - t10) * u + t10;
+    // vec2 texCoord = (t1 + t0) * v + 10;
+
+    // // Height = texture();
+
+    vec4 p00 = gl_in[0].gl_Position;
+    vec4 p01 = gl_in[1].gl_Position;
+    vec4 p10 = gl_in[2].gl_Position;
+
+    // vec4 uVec = p01 - p00;
+    // vec4 vVec = p10 - p01;
+    // vec4 newNormal = normalize(vec4(cross(vVec.xyz, uVec.xyz), 0));
+
+    // vec4 p0 = (p01 - p00) * u + p00;
+    // vec4 p1 = (p10 - p10) * u + p10;
+    // vec4 p = (p1 - p0) * v + p0;
+
+    // p += 0.1*newNormal;
+
+    gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * position;
+}

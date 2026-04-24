@@ -1,0 +1,55 @@
+#version 400 compatibility
+
+#include "lib/waves.glsl"
+
+layout (triangles, equal_spacing, ccw) in;
+
+uniform sampler2D heightMap;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+in vec2 texCoord[];
+in vec2 lmCoord[];
+in vec4 fragColour[];
+in vec3 normal[];
+flat in int waterCheck[];
+
+out vec2 texCoordF;
+out vec2 lmCoordF;
+out vec4 fragColourF;
+out vec3 normalF;
+flat out int waterCheckF;
+
+// out float Height;
+
+void main() {
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    // Barycentric interpolation for all the attributes
+    texCoordF = (u * texCoord[0] + v * texCoord[1] + (1 - u - v) * texCoord[2]);
+    lmCoordF = (u * lmCoord[0] + v * lmCoord[1] + (1 - u - v) * lmCoord[2]);
+    normalF = (u * normal[0] + v * normal[1] + (1 - u - v) * normal[2]);
+    fragColourF = (u * fragColour[0] + v * fragColour[1] + (1 - u - v) * fragColour[2]);
+    waterCheckF = waterCheck[0];
+    vec4 position = (u * gl_in[0].gl_Position + v * gl_in[1].gl_Position + (1 - u - v) * gl_in[2].gl_Position);
+
+    if (waterCheck[0] == 1) {
+        vec3 displacement = globalDisplacement;
+        displacement += gerstner(position.xyz, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
+        displacement += gerstner(position.xyz, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
+        displacement += gerstner(position.xyz, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+
+        normalF += gerstner_normal(position.xyz, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
+        normalF += gerstner_normal(position.xyz, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
+        normalF += gerstner_normal(position.xyz, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+        
+        position.xyz += displacement;
+        normalF = normalize(normalF);
+        
+        gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4(position.xyz - cameraPosition, 1.0);
+    } else {
+        gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * position;
+    }
+}

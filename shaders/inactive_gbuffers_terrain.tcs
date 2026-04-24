@@ -1,0 +1,30 @@
+#version 400 compatibility
+
+layout (vertices = 3) out;
+
+in vec2 texCoordV[];
+in vec2 lmCoordV[];
+in vec4 fragColourV[];
+in vec3 normalV[];
+
+out vec2 texCoord[];
+out vec2 lmCoord[];
+out vec4 fragColour[];
+out vec3 normal[];
+
+void main() {
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    
+    texCoord[gl_InvocationID] = texCoordV[gl_InvocationID];
+    lmCoord[gl_InvocationID] = lmCoordV[gl_InvocationID];
+    fragColour[gl_InvocationID] = fragColourV[gl_InvocationID];
+    normal[gl_InvocationID] = normalV[gl_InvocationID];
+
+    if (gl_InvocationID == 0) {
+        gl_TessLevelOuter[0] = 16.0;
+        gl_TessLevelOuter[1] = 16.0;
+        gl_TessLevelOuter[2] = 16.0;
+
+        gl_TessLevelInner[0] = 16.0;
+    }
+}
