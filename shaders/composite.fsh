@@ -95,5 +95,5 @@ void main() {
 
     // colour = vec4(vec3(combinedDepth), 1.0);
     // colour.rgb = vec3(1.0 + viewPos.z*(0.5 + viewPos.z / far));
-    // colour.rgb *= blocklight + skylight + ambient + sunlight;
+    colour.rgb *= blocklight + skylight + ambient + sunlight;
 }
