@@ -24,7 +24,7 @@ void main() {
         // if water
         vec3 worldSpaceVertexPosition = gl_Vertex.xyz;
 
-        vec3 displacement = globalDisplacement;
+        vec3 displacement = cameraPosition + globalDisplacement;
 
         globalDisplacement += gerstner(worldSpaceVertexPosition, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
         globalDisplacement += gerstner(worldSpaceVertexPosition, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
@@ -33,6 +33,6 @@ void main() {
         position.xyz += globalDisplacement;
     }
 
-    gl_Position = gl_ProjectionMatrix * (vec4((gl_ModelViewMatrix * vec4(position.xyz, 1.0)).xyz, 1.0));
+    gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4(position.xyz - cameraPosition, 1.0);
     gl_Position.xyz = distortShadowClipPos(gl_Position.xyz);
 }

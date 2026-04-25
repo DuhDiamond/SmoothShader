@@ -5,6 +5,8 @@
 layout (triangles, equal_spacing, ccw) in;
 
 uniform sampler2D heightMap;
+uniform sampler2D depthtex0;
+uniform sampler2D depthtex1;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -36,14 +38,22 @@ void main() {
     vec4 position = (u * gl_in[0].gl_Position + v * gl_in[1].gl_Position + (1 - u - v) * gl_in[2].gl_Position);
 
     if (waterCheck[0] == 1) {
+        float depthofTerrain = 1.0 - texture(depthtex1, texCoordF).r;
+        float depthofWater = 1.0 - texture(depthtex0, texCoordF).r;
+        float combinedDepth = clamp(depthofTerrain - depthofWater, 0.0, 1.0);
+
+
         vec3 displacement = globalDisplacement;
         displacement += gerstner(position.xyz, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
         displacement += gerstner(position.xyz, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
         displacement += gerstner(position.xyz, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+        // displacement *= combinedDepth;
 
-        normalF += gerstner_normal(position.xyz, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
-        normalF += gerstner_normal(position.xyz, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
-        normalF += gerstner_normal(position.xyz, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+        vec3 extraNormal = vec3(0.0, 0.0, 0.0);
+        extraNormal += gerstner_normal(position.xyz, dir1, frameTimeCounter, wave1_speed, wave1_steepness, wave1_amplitude, wave1_wavelength);
+        extraNormal += gerstner_normal(position.xyz, dir2, frameTimeCounter, wave2_speed, wave2_steepness, wave2_amplitude, wave2_wavelength);
+        extraNormal += gerstner_normal(position.xyz, dir3, frameTimeCounter, wave3_speed, wave3_steepness, wave3_amplitude, wave3_wavelength);
+        // extraNormal *= combinedDepth;
         
         position.xyz += displacement;
         normalF = normalize(normalF);

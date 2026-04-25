@@ -5,6 +5,7 @@ uniform float alphaTestRef;
 uniform sampler2D gtexture;
 uniform sampler2D lightmap;
 uniform sampler2D depthtex0;
+uniform mat4 gbufferModelViewInverse;
 
 in vec2 texCoordF;
 in vec2 lmCoordF;

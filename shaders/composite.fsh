@@ -6,6 +6,7 @@ in vec2 texCoord;
 
 uniform int blockEntityId;
 uniform sampler2D depthtex0;
+uniform sampler2D depthtex1;
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;
@@ -19,7 +20,11 @@ uniform sampler2D shadowtex0;
 uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
+uniform mat4 shadowModelViewInverse;
 uniform mat4 shadowProjection;
+uniform vec3 viewPos;
+uniform vec3 cameraPosition;
+uniform float far;
 
 const vec3 blocklightColour = vec3(1.0, 0.5, 0.08);
 const vec3 skylightColour = vec3(0.05, 0.15, 0.3);
@@ -49,12 +54,10 @@ void main() {
     gridCoord.y -= mod(gridCoord.y, 20.0 / viewHeight);
 
     float depth = texture(depthtex0, texCoord).r;
+    // if (depth == 1.0) {
+    //     return;
+    // }
     
-    /*
-    if (depth == 1.0) {
-        return;
-    }
-    */
 
 
     vec3 sunDirection = 0.01 * sunPosition;
@@ -86,5 +89,11 @@ void main() {
     vec3 worldLightVector = mat3(gbufferModelViewInverse) * lightVector;
     vec3 sunlight = sunlightColour * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
 
-    colour.rgb *= blocklight + skylight + ambient + sunlight;
+    float depthofTerrain = (shadowModelViewInverse * texture(depthtex1, texCoord)).r;
+    float depthofWater = (shadowModelViewInverse * texture(depthtex0, texCoord)).r;
+    float combinedDepth = clamp((depthofTerrain - depthofWater), 0.0, 1.0);
+
+    // colour = vec4(vec3(combinedDepth), 1.0);
+    // colour.rgb = vec3(1.0 + viewPos.z*(0.5 + viewPos.z / far));
+    // colour.rgb *= blocklight + skylight + ambient + sunlight;
 }

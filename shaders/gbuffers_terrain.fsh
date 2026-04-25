@@ -6,6 +6,11 @@ uniform sampler2D gtexture;
 uniform sampler2D lightmap;
 uniform vec3 relativeEyePosition;
 uniform float alphaTestRef;
+uniform vec3 cameraPosition;
+uniform vec3 shadowViewPos;
+uniform mat4 shadowModelViewInverse;
+uniform mat4 shadowModelView;
+uniform vec3 feetPlayerPos;
 
 in vec2 edgeCoordX_l;
 in vec2 edgeCoordX_r;
@@ -41,6 +46,9 @@ void main() {
     }
     
     vec3 outputColour = colour * fragColourF.xyz;
+    vec3 shadowmap = feetPlayerPos + (shadowModelViewInverse * vec4(shadowViewPos, 1.0)).xyz;
+    // outputColour.rgb = shadowmap;
+
 
     outColour0 = vec4(outputColour, transparency);
 }
